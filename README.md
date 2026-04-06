@@ -44,6 +44,7 @@ apt update && apt upgrade -y
 apt install git
 
 git clone https://github.com/SantillanMJoseM/DeployL2Lisvus.git
+
 cd DeployL2Lisvus
 
 chmod +x init.sh
@@ -108,6 +109,7 @@ apt update && apt upgrade -y
 apt install git
 
 git clone https://github.com/SantillanMJoseM/DeployL2Lisvus.git
+
 cd DeployL2Lisvus
 
 chmod +x init.sh
