@@ -61,8 +61,10 @@ done
 # ==============================
 echo "🌐 Configurando hosts del GameServer..."
 
-sed -i "s|InternalHostname = .*|InternalHostname = ${INTERNAL_HOST}|" /opt/l2server/gameserver/config/GameServer.properties
-sed -i "s|ExternalHostname = .*|ExternalHostname = ${EXTERNAL_HOST}|" /opt/l2server/gameserver/config/GameServer.properties
+FILE=/opt/l2server/gameserver/config/GameServer.properties
+
+sed -i "s|^InternalHostname.*|InternalHostname=${INTERNAL_HOST}|" $FILE
+sed -i "s|^ExternalHostname.*|ExternalHostname=${EXTERNAL_HOST}|" $FILE
 
 # ==============================
 # 📥 IMPORTAR DB
@@ -92,17 +94,21 @@ fi
 # 🎮 REGISTRAR GAMESERVER
 # ==============================
 if [ "$RESET_DB" = "yes" ]; then
+
+  echo "🧹 Limpiando GameServers..."
+
+  mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME -e "DELETE FROM gameservers;"
+
   echo "🎮 Registrando GameServer..."
 
   cd /opt/l2server/login
-
   chmod +x *.sh
 
   printf "%s\n" "${GAMESERVER_ID}" | ./RegisterGameServer.sh
+
 else
   echo "⚠️ Registro de GameServer omitido"
 fi
-
 # ==============================
 # 🚀 INICIAR SERVIDORES
 # ==============================
