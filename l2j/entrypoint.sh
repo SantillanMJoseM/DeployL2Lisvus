@@ -48,6 +48,12 @@ echo "🎮 Registrando GameServer..."
 
 cd /opt/l2server/login
 
+chmod +x *.sh
+
+cd /opt/l2server/gameserver
+
+chmod +x *.sh
+
 echo -e "${GAMESERVER_ID}\n" | ./RegisterGameServer.sh
 
 echo "🚀 Iniciando servidores..."
