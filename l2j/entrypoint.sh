@@ -17,67 +17,87 @@ fi
 cd l2j-lisvus
 
 # ==============================
-# 🔨 COMPILAR
+# 🔨 COMPILAR SOLO SI NO EXISTE BUILD
 # ==============================
-echo "🔨 Compilando datapack..."
-cd datapack
-ant clean && ant
+if [ ! -f "core/build/core.zip" ]; then
+  echo "🔨 Compilando core..."
+  cd core
+  ant clean && ant
+else
+  echo "✅ Core ya compilado"
+fi
 
-echo "🔨 Compilando core..."
-cd ../core
-ant clean && ant
-
-# ==============================
-# 📦 DESCOMPRIMIR SERVER
-# ==============================
-echo "📦 Preparando servidor..."
-mkdir -p /opt/l2server
-
-unzip -o build/core.zip -d /opt/l2server
-unzip -o ../datapack/build/datapack.zip -d /opt/l2server
-
-# ==============================
-# 🔐 PERMISOS
-# ==============================
-chmod -R +x /opt/l2server
+if [ ! -f "datapack/build/datapack.zip" ]; then
+  echo "🔨 Compilando datapack..."
+  cd ../datapack
+  ant clean && ant
+else
+  echo "✅ Datapack ya compilado"
+fi
 
 # ==============================
-# ⚙️ CONFIGURAR DB
+# 📦 DESCOMPRIMIR SI NO EXISTE SERVER
 # ==============================
-echo "🗄️ Configurando base de datos..."
+if [ ! -d "/opt/l2server/login" ]; then
+  echo "📦 Preparando servidor..."
+
+  mkdir -p /opt/l2server
+
+  unzip -o /opt/l2j-lisvus/core/build/core.zip -d /opt/l2server
+  unzip -o /opt/l2j-lisvus/datapack/build/datapack.zip -d /opt/l2server
+
+  chmod -R +x /opt/l2server
+else
+  echo "✅ Servidor ya desplegado"
+fi
+
+# ==============================
+# ⚙️ CONFIGURAR DB (SIEMPRE)
+# ==============================
+echo "🗄️ Configurando conexión a base de datos..."
 
 for file in \
   /opt/l2server/login/config/LoginServer.properties \
   /opt/l2server/gameserver/config/GameServer.properties
 do
-  sed -i "s|Driver=.*|Driver=org.mariadb.jdbc.Driver|" $file
-  sed -i "s|URL=.*|URL=jdbc:mariadb://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false|" $file
-  sed -i "s|Login=.*|Login=${DB_USER}|" $file
-  sed -i "s|Password=.*|Password=${DB_PASSWORD}|" $file
+  sed -i "s|^Driver.*|Driver=org.mariadb.jdbc.Driver|" $file
+  sed -i "s|^URL.*|URL=jdbc:mariadb://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false|" $file
+  sed -i "s|^Login.*|Login=${DB_USER}|" $file
+  sed -i "s|^Password.*|Password=${DB_PASSWORD}|" $file
 done
 
 # ==============================
-# 🌐 CONFIGURAR HOST (SOLO GAME)
+# 🌐 CONFIGURAR HOST (GAME)
 # ==============================
-echo "🌐 Configurando hosts del GameServer..."
+echo "🌐 Configurando IP del GameServer..."
 
 FILE=/opt/l2server/gameserver/config/GameServer.properties
 
-sed -i "s|^InternalHostname.*|InternalHostname=${INTERNAL_HOST}|" $FILE
+sed -i "s|^InternalHostname.*|InternalHostname=${EXTERNAL_HOST}|" $FILE
 sed -i "s|^ExternalHostname.*|ExternalHostname=${EXTERNAL_HOST}|" $FILE
 
 # ==============================
-# 📥 IMPORTAR DB
+# 📥 GESTIÓN DE BASE DE DATOS
 # ==============================
-echo "📥 Gestión de base de datos..."
+echo "📥 Verificando estado de la base de datos..."
+
+TABLE_EXISTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME \
+  -e "SHOW TABLES LIKE 'accounts';" | grep accounts || true)
 
 if [ "$RESET_DB" = "yes" ]; then
-  echo "🧨 Reseteando base de datos..."
+
+  echo "🧨 RESET_DB activado - recreando base..."
 
   mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD -e "DROP DATABASE IF EXISTS $DB_NAME;"
   mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD -e "CREATE DATABASE $DB_NAME;"
 
-  echo "📥 Importando SQL..."
+  TABLE_EXISTS=""
+
+fi
+
+if [ -z "$TABLE_EXISTS" ]; then
+
+  echo "🆕 Inicializando base de datos..."
 
   cd /opt/l2j-lisvus/datapack/sql
 
@@ -86,19 +106,9 @@ if [ "$RESET_DB" = "yes" ]; then
     mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < "$f"
   done
 
-else
-  echo "⚠️ Se conserva la base de datos existente"
-fi
-
-# ==============================
-# 🎮 REGISTRAR GAMESERVER
-# ==============================
-if [ "$RESET_DB" = "yes" ]; then
-
-  echo "🧹 Limpiando GameServers..."
-
-  mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME -e "DELETE FROM gameservers;"
-
+  # ==============================
+  # 🎮 REGISTRAR GAMESERVER SOLO SI DB NUEVA
+  # ==============================
   echo "🎮 Registrando GameServer..."
 
   cd /opt/l2server/login
@@ -107,8 +117,9 @@ if [ "$RESET_DB" = "yes" ]; then
   printf "%s\n" "${GAMESERVER_ID}" | ./RegisterGameServer.sh
 
 else
-  echo "⚠️ Registro de GameServer omitido"
+  echo "✅ Base de datos ya inicializada, no se modifica"
 fi
+
 # ==============================
 # 🚀 INICIAR SERVIDORES
 # ==============================
@@ -121,6 +132,12 @@ cd /opt/l2server/gameserver
 java -cp "./libs/*:L2JLisvus.jar" net.sf.l2j.gameserver.GameServer > game.log 2>&1 &
 
 # ==============================
-# 📜 LOGS
+# 📜 LOGS (esperar archivo)
 # ==============================
+echo "⏳ Esperando logs..."
+
+while [ ! -f /opt/l2server/gameserver/game.log ]; do
+  sleep 2
+done
+
 tail -f /opt/l2server/login/login.log /opt/l2server/gameserver/game.log
