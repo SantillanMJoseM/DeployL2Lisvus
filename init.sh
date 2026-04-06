@@ -3,66 +3,102 @@
 echo "===== CONFIGURACION L2J ====="
 
 # ==============================
-# 🗄️ DATABASE
+# 📄 VERIFICAR SI EXISTE .ENV
 # ==============================
-read -p "DB Name [l2j]: " DB_NAME
-DB_NAME=${DB_NAME:-l2j}
+if [ -f ".env" ]; then
+  echo "⚠️ Ya existe un archivo .env"
+  echo ""
+  echo "1) Usar configuración existente"
+  echo "2) Regenerar configuración"
+  read -p "Seleccioná una opción [1-2]: " OPTION
 
-read -p "DB User [l2j]: " DB_USER
-DB_USER=${DB_USER:-l2j}
+  if [ "$OPTION" = "1" ]; then
+    echo "✅ Usando configuración existente"
 
-read -p "DB Password: " DB_PASSWORD
-if [ -z "$DB_PASSWORD" ]; then
-  echo "❌ La password no puede estar vacía"
-  exit 1
-fi
+    echo ""
+    read -p "¿Resetear base de datos? (yes/no) [no]: " RESET_DB
+    RESET_DB=${RESET_DB:-no}
 
-read -p "DB Port [3306]: " DB_PORT
-DB_PORT=${DB_PORT:-3306}
+    # actualizar variable
+    if grep -q "^RESET_DB=" .env; then
+      sed -i "s/^RESET_DB=.*/RESET_DB=$RESET_DB/" .env
+    else
+      echo "RESET_DB=$RESET_DB" >> .env
+    fi
 
-read -p "MySQL Root Password: " MYSQL_ROOT_PASSWORD
-if [ -z "$MYSQL_ROOT_PASSWORD" ]; then
-  echo "❌ Root password no puede estar vacía"
-  exit 1
-fi
-
-# ==============================
-# 🎮 GAME SERVER
-# ==============================
-read -p "GameServer ID [1]: " GAMESERVER_ID
-GAMESERVER_ID=${GAMESERVER_ID:-1}
-
-read -p "Internal Host [127.0.0.1]: " INTERNAL_HOST
-INTERNAL_HOST=${INTERNAL_HOST:-127.0.0.1}
-
-# ==============================
-# 🌐 DETECTAR IP AUTOMÁTICA
-# ==============================
-DEFAULT_IP=$(ip route get 1 | awk '{print $7; exit}')
-
-echo "💡 IP detectada automáticamente: $DEFAULT_IP"
-
-read -p "External Host (SIN puerto) [$DEFAULT_IP]: " EXTERNAL_HOST
-EXTERNAL_HOST=${EXTERNAL_HOST:-$DEFAULT_IP}
-
-# Validación
-if [[ "$EXTERNAL_HOST" == *":"* ]]; then
-  echo "❌ No pongas puerto en ExternalHost (ej: 192.168.1.83)"
-  exit 1
-fi
-
-if [ -z "$EXTERNAL_HOST" ]; then
-  echo "❌ ExternalHost no puede estar vacío"
-  exit 1
+  elif [ "$OPTION" = "2" ]; then
+    echo "♻️ Regenerando configuración..."
+    rm .env
+  else
+    echo "❌ Opción inválida"
+    exit 1
+  fi
 fi
 
 # ==============================
-# 📄 CREAR .ENV
+# 🆕 CREAR .ENV SI NO EXISTE
 # ==============================
-cat > .env <<EOF
-# ==============================
-# DATABASE
-# ==============================
+if [ ! -f ".env" ]; then
+
+  echo ""
+  echo "===== NUEVA CONFIGURACION ====="
+
+  # ==============================
+  # 🗄️ DATABASE
+  # ==============================
+  read -p "DB Name [l2j]: " DB_NAME
+  DB_NAME=${DB_NAME:-l2j}
+
+  read -p "DB User [l2j]: " DB_USER
+  DB_USER=${DB_USER:-l2j}
+
+  read -p "DB Password: " DB_PASSWORD
+  [ -z "$DB_PASSWORD" ] && echo "❌ Password requerida" && exit 1
+
+  read -p "DB Port [3306]: " DB_PORT
+  DB_PORT=${DB_PORT:-3306}
+
+  read -p "MySQL Root Password: " MYSQL_ROOT_PASSWORD
+  [ -z "$MYSQL_ROOT_PASSWORD" ] && echo "❌ Root password requerida" && exit 1
+
+  # ==============================
+  # 🎮 GAME SERVER
+  # ==============================
+  read -p "GameServer ID [1]: " GAMESERVER_ID
+  GAMESERVER_ID=${GAMESERVER_ID:-1}
+
+  read -p "Internal Host [127.0.0.1]: " INTERNAL_HOST
+  INTERNAL_HOST=${INTERNAL_HOST:-127.0.0.1}
+
+  # ==============================
+  # 🌐 DETECTAR IP
+  # ==============================
+  DEFAULT_IP=$(ip route get 1 | awk '{print $7; exit}')
+  echo "💡 IP detectada automáticamente: $DEFAULT_IP"
+
+  read -p "External Host (SIN puerto) [$DEFAULT_IP]: " EXTERNAL_HOST
+  EXTERNAL_HOST=${EXTERNAL_HOST:-$DEFAULT_IP}
+
+  if [[ "$EXTERNAL_HOST" == *":"* ]]; then
+    echo "❌ No pongas puerto en ExternalHost"
+    exit 1
+  fi
+
+  if [ -z "$EXTERNAL_HOST" ]; then
+    echo "❌ ExternalHost no puede estar vacío"
+    exit 1
+  fi
+
+  # ==============================
+  # 🧹 RESET DB
+  # ==============================
+  read -p "¿Resetear base de datos? (yes/no) [yes]: " RESET_DB
+  RESET_DB=${RESET_DB:-yes}
+
+  # ==============================
+  # 📄 CREAR .ENV
+  # ==============================
+  cat > .env <<EOF
 DB_HOST=mariadb
 DB_PORT=$DB_PORT
 DB_NAME=$DB_NAME
@@ -70,19 +106,19 @@ DB_USER=$DB_USER
 DB_PASSWORD=$DB_PASSWORD
 MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
 
-# ==============================
-# GAME SERVER
-# ==============================
 GAMESERVER_ID=$GAMESERVER_ID
 INTERNAL_HOST=$INTERNAL_HOST
 EXTERNAL_HOST=$EXTERNAL_HOST
+
+RESET_DB=$RESET_DB
 EOF
 
-echo "✅ Archivo .env creado correctamente"
+  echo "✅ Archivo .env creado correctamente"
+fi
+
 # ==============================
 # 🐳 INSTALAR DOCKER SI NO EXISTE
 # ==============================
-
 if ! command -v docker &> /dev/null
 then
     echo "🐳 Docker no encontrado. Instalando..."
@@ -109,21 +145,19 @@ then
 
     apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-    echo "🔄 Intentando iniciar Docker..."
+    echo "🔄 Iniciando Docker..."
 
-    # 🔥 IMPORTANTE: systemctl puede no funcionar en LXC
     if command -v systemctl &> /dev/null
     then
         systemctl enable docker || true
         systemctl start docker || true
     fi
 
-    # 🔥 fallback directo
+    # fallback LXC
     dockerd > /dev/null 2>&1 &
 
     sleep 5
 
-    # ✅ VALIDAR instalación
     if ! command -v docker &> /dev/null
     then
         echo "❌ Docker no se instaló correctamente"
@@ -143,5 +177,6 @@ echo "🚀 Iniciando entorno..."
 docker compose down
 docker compose up -d --build
 
-echo "✅ Servidor desplegado"
+echo ""
+echo "✅ Servidor desplegado correctamente"
 echo "👉 Ver logs: docker logs -f l2j_server"

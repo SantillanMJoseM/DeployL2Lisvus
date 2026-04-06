@@ -67,25 +67,41 @@ sed -i "s|ExternalHostname = .*|ExternalHostname = ${EXTERNAL_HOST}|" /opt/l2ser
 # ==============================
 # 📥 IMPORTAR DB
 # ==============================
-echo "📥 Importando base de datos..."
+echo "📥 Gestión de base de datos..."
 
-cd /opt/l2j-lisvus/datapack/sql
+if [ "$RESET_DB" = "yes" ]; then
+  echo "🧨 Reseteando base de datos..."
 
-for f in $(ls *.sql custom/*.sql 2>/dev/null); do
-  echo "Importando $f"
-  mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < "$f"
-done
+  mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD -e "DROP DATABASE IF EXISTS $DB_NAME;"
+  mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD -e "CREATE DATABASE $DB_NAME;"
+
+  echo "📥 Importando SQL..."
+
+  cd /opt/l2j-lisvus/datapack/sql
+
+  for f in $(ls *.sql custom/*.sql 2>/dev/null); do
+    echo "Importando $f"
+    mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < "$f"
+  done
+
+else
+  echo "⚠️ Se conserva la base de datos existente"
+fi
 
 # ==============================
 # 🎮 REGISTRAR GAMESERVER
 # ==============================
-echo "🎮 Registrando GameServer..."
+if [ "$RESET_DB" = "yes" ]; then
+  echo "🎮 Registrando GameServer..."
 
-cd /opt/l2server/login
+  cd /opt/l2server/login
 
-chmod +x *.sh
+  chmod +x *.sh
 
-echo -e "${GAMESERVER_ID}\n" | ./RegisterGameServer.sh
+  printf "%s\n" "${GAMESERVER_ID}" | ./RegisterGameServer.sh
+else
+  echo "⚠️ Registro de GameServer omitido"
+fi
 
 # ==============================
 # 🚀 INICIAR SERVIDORES
