@@ -1,0 +1,38 @@
+#!/bin/bash
+
+echo "===== CONFIGURACION L2J ====="
+
+read -p "DB Name [l2j]: " DB_NAME
+DB_NAME=${DB_NAME:-l2j}
+
+read -p "DB User [l2j]: " DB_USER
+DB_USER=${DB_USER:-l2j}
+
+read -p "DB Password: " DB_PASSWORD
+
+read -p "DB Port [3306]: " DB_PORT
+DB_PORT=${DB_PORT:-3306}
+
+read -p "MySQL Root Password: " MYSQL_ROOT_PASSWORD
+
+read -p "GameServer ID [1]: " GAMESERVER_ID
+GAMESERVER_ID=${GAMESERVER_ID:-1}
+
+read -p "Internal Host [127.0.0.1]: " INTERNAL_HOST
+INTERNAL_HOST=${INTERNAL_HOST:-127.0.0.1}
+
+read -p "External Host: " EXTERNAL_HOST
+
+cat > .env <<EOF
+DB_HOST=mariadb
+DB_PORT=$DB_PORT
+DB_NAME=$DB_NAME
+DB_USER=$DB_USER
+DB_PASSWORD=$DB_PASSWORD
+MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+GAMESERVER_ID=$GAMESERVER_ID
+INTERNAL_HOST=$INTERNAL_HOST
+EXTERNAL_HOST=$EXTERNAL_HOST
+EOF
+
+echo "✅ Archivo .env creado"
