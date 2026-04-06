@@ -69,16 +69,18 @@ EXTERNAL_HOST=$EXTERNAL_HOST
 EOF
 
 echo "✅ Archivo .env creado correctamente"
-
 # ==============================
 # 🐳 INSTALAR DOCKER SI NO EXISTE
 # ==============================
+
 if ! command -v docker &> /dev/null
 then
     echo "🐳 Docker no encontrado. Instalando..."
 
+    set -e
+
     apt update
-    apt install -y ca-certificates curl gnupg
+    apt install -y ca-certificates curl gnupg lsb-release
 
     install -m 0755 -d /etc/apt/keyrings
 
@@ -90,15 +92,33 @@ then
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
       https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo $VERSION_CODENAME) stable" | \
+      $(lsb_release -cs) stable" | \
       tee /etc/apt/sources.list.d/docker.list > /dev/null
 
     apt update
 
     apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-    systemctl enable docker
-    systemctl start docker
+    echo "🔄 Intentando iniciar Docker..."
+
+    # 🔥 IMPORTANTE: systemctl puede no funcionar en LXC
+    if command -v systemctl &> /dev/null
+    then
+        systemctl enable docker || true
+        systemctl start docker || true
+    fi
+
+    # 🔥 fallback directo
+    dockerd > /dev/null 2>&1 &
+
+    sleep 5
+
+    # ✅ VALIDAR instalación
+    if ! command -v docker &> /dev/null
+    then
+        echo "❌ Docker no se instaló correctamente"
+        exit 1
+    fi
 
     echo "✅ Docker instalado correctamente"
 else
