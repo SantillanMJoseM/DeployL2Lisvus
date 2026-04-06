@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mariadb:10.6
+    container_name: l2-db
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: \
+      MYSQL_DATABASE: \
+      MYSQL_USER: \
+      MYSQL_PASSWORD: \
+    ports:
+      - "3306:3306"
+
+  l2:
+    build: .
+    container_name: l2-server
+    depends_on:
+      - db
+    env_file: .env
+    ports:
+      - "2106:2106"
+      - "9014:9014"
+      - "7777:7777"
+    stdin_open: true
+    tty: true
