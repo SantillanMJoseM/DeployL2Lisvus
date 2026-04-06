@@ -46,8 +46,6 @@ apt install git
 git clone https://github.com/SantillanMJoseM/DeployL2Lisvus.git
 cd DeployL2Lisvus
 
-cd ~/DeployL2Lisvus
-
 chmod +x init.sh
 ./init.sh
 
@@ -110,8 +108,6 @@ apt install git
 
 git clone https://github.com/SantillanMJoseM/DeployL2Lisvus.git
 cd DeployL2Lisvus
-
-cd ~/DeployL2Lisvus
 
 chmod +x init.sh
 ./init.sh
