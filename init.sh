@@ -58,7 +58,7 @@ if [ ! -f ".env" ]; then
   read -p "DB Port [3306]: " DB_PORT
   DB_PORT=${DB_PORT:-3306}
 
-  read -p "MySQL Root Password: " MYSQL_ROOT_PASSWORD
+  read -p "MariaDB Root Password: " MYSQL_ROOT_PASSWORD
   [ -z "$MYSQL_ROOT_PASSWORD" ] && echo "❌ Root password requerida" && exit 1
 
   # ==============================

@@ -39,6 +39,7 @@ Conexión a internet
 👉 No es necesario instalar Docker manualmente (el script lo hace automáticamente)
 
 🚀 Instalación
+
 apt update && apt upgrade -y 
 apt install git
 
@@ -103,6 +104,7 @@ Internet connection
 👉 Docker is installed automatically if not present
 
 🚀 Installation
+
 apt update && apt upgrade -y 
 apt install git
 
