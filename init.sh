@@ -35,7 +35,17 @@ GAMESERVER_ID=${GAMESERVER_ID:-1}
 read -p "Internal Host [127.0.0.1]: " INTERNAL_HOST
 INTERNAL_HOST=${INTERNAL_HOST:-127.0.0.1}
 
-read -p "External Host (SIN puerto): " EXTERNAL_HOST
+# ==============================
+# 🌐 DETECTAR IP AUTOMÁTICA
+# ==============================
+DEFAULT_IP=$(ip route get 1 | awk '{print $7; exit}')
+
+echo "💡 IP detectada automáticamente: $DEFAULT_IP"
+
+read -p "External Host (SIN puerto) [$DEFAULT_IP]: " EXTERNAL_HOST
+EXTERNAL_HOST=${EXTERNAL_HOST:-$DEFAULT_IP}
+
+# Validación
 if [[ "$EXTERNAL_HOST" == *":"* ]]; then
   echo "❌ No pongas puerto en ExternalHost (ej: 192.168.1.83)"
   exit 1
