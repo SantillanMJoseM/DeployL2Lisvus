@@ -180,3 +180,34 @@ docker compose up -d --build
 echo ""
 echo "✅ Servidor desplegado correctamente"
 echo "👉 Ver logs: docker logs -f l2j_server"
+
+
+# ==============================
+# 🔁 AUTO START AL REINICIAR
+# ==============================
+echo ""
+read -p "¿Configurar auto inicio al reiniciar? (yes/no) [yes]: " AUTO_START
+AUTO_START=${AUTO_START:-yes}
+
+if [ "$AUTO_START" = "yes" ]; then
+
+  echo "⚙️ Configurando inicio automático..."
+
+  START_SCRIPT="$(pwd)/start-l2j.sh"
+
+  # Verificar que exista el script
+  if [ ! -f "$START_SCRIPT" ]; then
+    echo "❌ No existe start-l2j.sh en el repo"
+    exit 1
+  fi
+
+  chmod +x "$START_SCRIPT"
+
+  # evitar duplicados en crontab
+  (crontab -l 2>/dev/null | grep -v "$START_SCRIPT"; echo "@reboot $START_SCRIPT") | crontab -
+
+  echo "✅ Auto inicio configurado correctamente"
+
+else
+  echo "⚠️ Auto inicio omitido"
+fi
