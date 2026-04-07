@@ -60,10 +60,10 @@ for file in \
   /opt/l2server/login/config/LoginServer.properties \
   /opt/l2server/gameserver/config/GameServer.properties
 do
-  sed -i "s|^Driver.*|Driver=org.mariadb.jdbc.Driver|" $file
-  sed -i "s|^URL.*|URL=jdbc:mariadb://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false|" $file
-  sed -i "s|^Login.*|Login=${DB_USER}|" $file
-  sed -i "s|^Password.*|Password=${DB_PASSWORD}|" $file
+	sed -i "/# Database info/,/^$/ s|^Driver=.*|Driver=org.mariadb.jdbc.Driver|" $file
+	sed -i "/# Database info/,/^$/ s|^URL=.*|URL=jdbc:mariadb://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false|" $file
+	sed -i "/# Database info/,/^$/ s|^Login=.*|Login=${DB_USER}|" $file
+	sed -i "/# Database info/,/^$/ s|^Password=.*|Password=${DB_PASSWORD}|" $file
 done
 
 # ==============================
