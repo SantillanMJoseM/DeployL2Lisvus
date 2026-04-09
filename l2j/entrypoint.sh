@@ -121,8 +121,7 @@ if [ -z "$TABLE_EXISTS" ]; then
     cd /opt/l2server/login
     chmod +x *.sh
 
-    printf "%s\n" "${GAMESERVER_ID}" | ./RegisterGameServer.sh
-
+	echo -e "${GAMESERVER_ID}\n" | ./RegisterGameServer.sh	
   else
     echo "✅ GameServer ID ${GAMESERVER_ID} ya existe"
   fi
