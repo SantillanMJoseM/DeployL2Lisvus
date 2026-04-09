@@ -54,18 +54,18 @@ if [ ! -f ".env" ]; then
 
   read -p "DB Password: " DB_PASSWORD
   [ -z "$DB_PASSWORD" ] && echo "❌ Password requerida" && exit 1
+  
+  read -p "MariaDB Root Password: " MYSQL_ROOT_PASSWORD
+  [ -z "$MYSQL_ROOT_PASSWORD" ] && echo "❌ Root password requerida" && exit 1
 
   read -p "DB Port [3306]: " DB_PORT
   DB_PORT=${DB_PORT:-3306}
 
-  read -p "MariaDB Root Password: " MYSQL_ROOT_PASSWORD
-  [ -z "$MYSQL_ROOT_PASSWORD" ] && echo "❌ Root password requerida" && exit 1
-
   # ==============================
   # 🎮 GAME SERVER
   # ==============================
-  read -p "GameServer ID [1]: " GAMESERVER_ID
-  GAMESERVER_ID=${GAMESERVER_ID:-1}
+  # read -p "GameServer ID [1]: " GAMESERVER_ID
+  # GAMESERVER_ID=${GAMESERVER_ID:-1}
 
   read -p "Internal Host [127.0.0.1]: " INTERNAL_HOST
   INTERNAL_HOST=${INTERNAL_HOST:-127.0.0.1}
