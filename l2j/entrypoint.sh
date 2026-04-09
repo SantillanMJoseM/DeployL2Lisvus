@@ -108,8 +108,14 @@ if [ -z "$TABLE_EXISTS" ]; then
 
   # ==============================
   # 🎮 REGISTRAR GAMESERVER SOLO SI DB NUEVA
-  # ==============================
-  echo "🎮 Registrando GameServer..."
+echo "🎮 Verificando GameServer en base de datos..."
+
+GS_EXISTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME \
+  -se "SELECT COUNT(*) FROM gameservers WHERE server_id=${GAMESERVER_ID};")
+
+if [ "$GS_EXISTS" -eq 0 ]; then
+
+  echo "🆕 GameServer no registrado, procediendo..."
 
   cd /opt/l2server/login
   chmod +x *.sh
@@ -117,7 +123,7 @@ if [ -z "$TABLE_EXISTS" ]; then
   printf "%s\n" "${GAMESERVER_ID}" | ./RegisterGameServer.sh
 
 else
-  echo "✅ Base de datos ya inicializada, no se modifica"
+  echo "✅ GameServer ID ${GAMESERVER_ID} ya existe, no se registra nuevamente"
 fi
 
 # ==============================
