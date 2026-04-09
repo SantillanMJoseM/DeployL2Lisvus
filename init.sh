@@ -16,7 +16,7 @@ if [ -f ".env" ]; then
     echo "✅ Usando configuración existente"
 
     echo ""
-    read -p "¿Resetear base de datos? (yes/no) [no]: " RESET_DB
+    read -p "¿Resetear base de datos en cada encendido? (yes/no) [no]: " RESET_DB
     RESET_DB=${RESET_DB:-no}
 
     # actualizar variable
