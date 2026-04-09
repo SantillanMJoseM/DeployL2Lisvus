@@ -92,8 +92,8 @@ if [ ! -f ".env" ]; then
   # ==============================
   # 🧹 RESET DB
   # ==============================
-  read -p "¿Resetear base de datos? (yes/no) [yes]: " RESET_DB
-  RESET_DB=${RESET_DB:-yes}
+  read -p "¿Resetear base de datos? (yes/no) [no]: " RESET_DB
+  RESET_DB=${RESET_DB:-no}
 
   # ==============================
   # 📄 CREAR .ENV
