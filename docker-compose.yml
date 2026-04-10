@@ -12,6 +12,7 @@ services:
       - "${DB_PORT}:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./mariadb/conf.d:/etc/mysql/conf.d
 
   l2j:
     build: ./l2j
