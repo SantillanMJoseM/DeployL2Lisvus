@@ -140,8 +140,13 @@ cd /opt/l2server/login
 java -cp "./libs/*:L2JLisvus.jar" net.sf.l2j.loginserver.L2LoginServer > login.log 2>&1 &
 
 cd /opt/l2server/gameserver
-java -cp "./libs/*:L2JLisvus.jar" net.sf.l2j.gameserver.GameServer > game.log 2>&1 &
 
+while true; do
+  echo "🚀 Iniciando GameServer..."
+  java -cp "./libs/*:L2JLisvus.jar" net.sf.l2j.gameserver.GameServer >> game.log 2>&1
+  echo "⚠️ GameServer se detuvo. Reiniciando en 5 segundos..."
+  sleep 5
+done &
 # ==============================
 # 📜 LOGS (esperar archivo)
 # ==============================
